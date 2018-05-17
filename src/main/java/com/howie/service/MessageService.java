@@ -1,6 +1,7 @@
 package com.howie.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.howie.model.User;
 import com.howie.model.WebSocketMessage;
 import com.howie.util.DateUtils;
 
@@ -8,8 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.howie.constant.MessageCodeConstant.CHAT_MESSAGE_CODE;
-import static com.howie.constant.MessageCodeConstant.SYSTEM_MESSAGE_CODE;
+import static com.howie.constant.MessageCodeConstant.*;
 
 /**
  * Created with IntelliJ IDEA
@@ -43,12 +43,32 @@ public class MessageService {
         return JSONObject.toJSONString(webSocketMessage);
     }
 
-    public String getChatMessageJSONString(String nick, String chat) {
+    public String getGroupChatMessageJSONString(User user, String chat) {
         WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(CHAT_MESSAGE_CODE);
+        webSocketMessage.setCode(GROUP_CHAT_MESSAGE_CODE);
         webSocketMessage.setMessage(chat);
         webSocketMessage.setTime(DateUtils.date2String(new Date()));
-        webSocketMessage.setNick(nick);
+        webSocketMessage.setUser(user);
+        return JSONObject.toJSONString(webSocketMessage);
+    }
+
+    public String getPrivateChatMessageJSONString(User user, String id, String chat) {
+        WebSocketMessage webSocketMessage = new WebSocketMessage();
+        webSocketMessage.setCode(PRIVATE_CHAT_MESSAGE_CODE);
+        webSocketMessage.setMessage(chat);
+        webSocketMessage.setTime(DateUtils.date2String(new Date()));
+        webSocketMessage.setUser(user);
+        webSocketMessage.setReceiverId(id);
+        return JSONObject.toJSONString(webSocketMessage);
+    }
+
+    public String getPersonalSystemMessageJSONString(User user) {
+        WebSocketMessage webSocketMessage = new WebSocketMessage();
+        webSocketMessage.setCode(SYSTEM_MESSAGE_CODE);
+        Map<String, Object> map = new HashMap<>();
+        map.put("systemMessageCode", PERSONAL_SYSTEM_MESSGAE_CODE);
+        map.put("user", user);
+        webSocketMessage.setBody(map);
         return JSONObject.toJSONString(webSocketMessage);
     }
 }

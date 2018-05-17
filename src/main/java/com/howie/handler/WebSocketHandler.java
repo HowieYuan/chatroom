@@ -3,21 +3,21 @@ package com.howie.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.howie.config.NettyConfig;
 import com.howie.constant.WebSocketConstant;
-import com.howie.model.WebSocketMessage;
+import com.howie.model.User;
 import com.howie.service.MessageService;
 import com.howie.service.WebSocketInfoService;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
+
+import java.util.Objects;
+import java.util.UUID;
 
 import static com.howie.constant.MessageCodeConstant.*;
 
@@ -140,27 +140,51 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
         JSONObject json = JSONObject.parseObject(message);
         int code = json.getInteger("code");
         String nick = json.getString("nick");
+        User user = WebSocketInfoService.webSocketInfoMap.get(ctx.channel());
         String chatMessage = json.getString("chatMessage");
-        TextWebSocketFrame tws = null;
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
+        TextWebSocketFrame tws;
         switch (code) {
             case LOGIN_CODE:
-                if (!webSocketInfoService.addUser(ctx.channel(), nick)) {
+                String id = UUID.randomUUID().toString();
+                if (!webSocketInfoService.addUser(ctx.channel(), nick, id)) {
                     return;
                 }
                 webSocketInfoService.updateUserListAndCount();
                 tws = new TextWebSocketFrame(messageService
                         .getSystemMessageJSONString("欢迎" + nick + "来到聊天室~", NORMAL_SYSTEM_MESSGAE_CODE));
+                //群发，服务端向每个连接上来的客户端群发消息
+                NettyConfig.channelGroup.writeAndFlush(tws);
+                tws = new TextWebSocketFrame(messageService.getPersonalSystemMessageJSONString(user));
+                ctx.channel().writeAndFlush(tws);
                 break;
-            case CHAT_CODE:
+            case GROUP_CHAT_CODE:
                 tws = new TextWebSocketFrame(messageService
-                        .getChatMessageJSONString(nick, nick + ": " + chatMessage));
+                        .getGroupChatMessageJSONString(user, chatMessage));
+                //群发，服务端向每个连接上来的客户端群发消息
+                NettyConfig.channelGroup.writeAndFlush(tws);
                 break;
+            case PRIVATE_CHAT_CODE:
+                Channel myChannel = ctx.channel();
+                //接收人id
+                String receiverId = json.getString("id");
+                //发送人id
+                String senderId = user.getId();
+                //发给对方
+                tws = new TextWebSocketFrame(messageService
+                        .getPrivateChatMessageJSONString(user, senderId, chatMessage));
+                webSocketInfoService.sendPrivateChatMessage(receiverId, tws);
+                //如果不是发给自己
+                if (!Objects.equals(receiverId, senderId)) {
+                    //再发给自己
+                    tws = new TextWebSocketFrame(messageService
+                            .getPrivateChatMessageJSONString(user, receiverId,
+                                    nick + ": " + chatMessage));
+                    myChannel.writeAndFlush(tws);
+                }
+
             default:
         }
         System.out.println("服务端收到客户端的消息====>>>" + message);
-        //群发，服务端向每个连接上来的客户端群发消息
-        NettyConfig.channelGroup.writeAndFlush(tws);
     }
 
     /**

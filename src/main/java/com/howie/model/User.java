@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class User {
+    private String id;
     private String nick;
     private String address;
+    private String avatarAddress;
     private long loginTime;
 }

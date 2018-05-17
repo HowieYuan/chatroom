@@ -20,7 +20,14 @@ import java.util.Map;
 @Data
 public class WebSocketMessage {
     private Integer code;
-    private String nick;
+    /**
+     * 发送人信息
+     */
+    private User user;
+    /**
+     * 接收人 id
+     */
+    private String receiverId;
     private String time;
     private String message;
     /**

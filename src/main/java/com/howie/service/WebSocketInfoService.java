@@ -6,9 +6,7 @@ import com.howie.util.WebSocketUtil;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +27,7 @@ public class WebSocketInfoService {
     /**
      * 存储 Channel 与用户信息
      */
-    private static ConcurrentMap<Channel, User> webSocketInfoMap = new ConcurrentHashMap<Channel, User>();
+    public static ConcurrentMap<Channel, User> webSocketInfoMap = new ConcurrentHashMap<>();
     /**
      * 用户在线数量
      */
@@ -62,7 +60,7 @@ public class WebSocketInfoService {
         //更新在线用户列表
         List<User> userList = new ArrayList<>();
         Set<Channel> set = webSocketInfoMap.keySet();
-        for (Channel channel: set) {
+        for (Channel channel : set) {
             User user = webSocketInfoMap.get(channel);
             userList.add(user);
         }
@@ -71,14 +69,42 @@ public class WebSocketInfoService {
         NettyConfig.channelGroup.writeAndFlush(tws);
     }
 
-    public boolean addUser(Channel channel, String nick) {
+    public boolean addUser(Channel channel, String nick, String id) {
         User user = webSocketInfoMap.get(channel);
         if (user == null) {
             return false;
         }
+        user.setId(id);
         user.setNick(nick);
+        user.setAvatarAddress(getRandomAvatar());
         user.setLoginTime(System.currentTimeMillis());
         userCount.incrementAndGet();
         return true;
+    }
+
+    private String getRandomAvatar() {
+        int num = new Random().nextInt(12) + 1;
+        return "../img/" + num + ".png";
+    }
+
+    /**
+     * 发送私聊信息
+     *
+     * @param id  收信人id
+     * @param tws
+     */
+    public void sendPrivateChatMessage(String id, TextWebSocketFrame tws) {
+        Set<Channel> set = webSocketInfoMap.keySet();
+        Channel receiverChannel = null;
+        for (Channel channel : set) {
+            User user = webSocketInfoMap.get(channel);
+            if (user.getId().equals(id)) {
+                receiverChannel = channel;
+                break;
+            }
+        }
+        if (receiverChannel != null) {
+            receiverChannel.writeAndFlush(tws);
+        }
     }
 }
