@@ -8,7 +8,7 @@ import java.util.Date;
  * Created with IntelliJ IDEA
  *
  * @Author yuanhaoyue swithaoy@gmail.com
- * @Description
+ * @Description 日期格式转换工具类
  * @Date 2018-05-09
  * @Time 21:35
  */

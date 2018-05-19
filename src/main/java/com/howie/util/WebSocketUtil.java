@@ -15,9 +15,6 @@ import java.net.SocketAddress;
 public class WebSocketUtil {
     /**
      * 获得Channel远程主机IP地址
-     *
-     * @param channel
-     * @return
      */
     public static String getChannelAddress(final Channel channel) {
         if (null == channel) {

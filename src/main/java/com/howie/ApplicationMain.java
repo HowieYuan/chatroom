@@ -12,7 +12,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * Created with IntelliJ IDEA
  *
  * @Author yuanhaoyue swithaoy@gmail.com
- * @Description
+ * @Description 应用启动类
  * @Date 2018-05-07
  * @Time 20:55
  */

@@ -20,55 +20,19 @@ import static com.howie.constant.MessageCodeConstant.*;
  * @Time 20:57
  */
 public class MessageService {
-    public String getSystemMessageJSONString(String chat, int systemMessgaeCode) {
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(SYSTEM_MESSAGE_CODE);
-        webSocketMessage.setMessage(chat);
-        webSocketMessage.setTime(DateUtils.date2String(new Date()));
+    public String messageJSONStringFactory(int messageCode, String chatMessage, int systemMessageCode, Object o) {
+        WebSocketMessage webSocketMessage = new WebSocketMessage(messageCode, chatMessage,
+                DateUtils.date2String(new Date()));
         Map<String, Object> map = new HashMap<>();
-        map.put("systemMessageCode", systemMessgaeCode);
-        webSocketMessage.setBody(map);
-        return JSONObject.toJSONString(webSocketMessage);
-    }
-
-    public String getSystemMessageJSONString(String chat, int systemMessgaeCode, Object o) {
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(SYSTEM_MESSAGE_CODE);
-        webSocketMessage.setMessage(chat);
-        webSocketMessage.setTime(DateUtils.date2String(new Date()));
-        Map<String, Object> map = new HashMap<>();
-        map.put("systemMessageCode", systemMessgaeCode);
+        map.put("systemMessageCode", systemMessageCode);
         map.put("object", o);
         webSocketMessage.setBody(map);
         return JSONObject.toJSONString(webSocketMessage);
     }
 
-    public String getGroupChatMessageJSONString(User user, String chat) {
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(GROUP_CHAT_MESSAGE_CODE);
-        webSocketMessage.setMessage(chat);
-        webSocketMessage.setTime(DateUtils.date2String(new Date()));
-        webSocketMessage.setUser(user);
-        return JSONObject.toJSONString(webSocketMessage);
-    }
-
-    public String getPrivateChatMessageJSONString(User user, String id, String chat) {
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(PRIVATE_CHAT_MESSAGE_CODE);
-        webSocketMessage.setMessage(chat);
-        webSocketMessage.setTime(DateUtils.date2String(new Date()));
-        webSocketMessage.setUser(user);
-        webSocketMessage.setReceiverId(id);
-        return JSONObject.toJSONString(webSocketMessage);
-    }
-
-    public String getPersonalSystemMessageJSONString(User user) {
-        WebSocketMessage webSocketMessage = new WebSocketMessage();
-        webSocketMessage.setCode(SYSTEM_MESSAGE_CODE);
-        Map<String, Object> map = new HashMap<>();
-        map.put("systemMessageCode", PERSONAL_SYSTEM_MESSGAE_CODE);
-        map.put("user", user);
-        webSocketMessage.setBody(map);
+    public String messageJSONStringFactory(int messageCode, String chatMessage, User user, String receiverId) {
+        WebSocketMessage webSocketMessage = new WebSocketMessage(messageCode, chatMessage, user
+                , receiverId, DateUtils.date2String(new Date()));
         return JSONObject.toJSONString(webSocketMessage);
     }
 }

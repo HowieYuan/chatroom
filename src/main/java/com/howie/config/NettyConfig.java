@@ -15,6 +15,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 public class NettyConfig {
     /**
      * 存储每个客户端接入进来时的 channel 对象
+     * 主要用于使用 writeAndFlush 方法广播信息
      */
     public static ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 }

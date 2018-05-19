@@ -26,7 +26,7 @@ import static com.howie.constant.MessageCodeConstant.*;
  * Created with IntelliJ IDEA
  *
  * @Author yuanhaoyue swithaoy@gmail.com
- * @Description
+ * @Description 接收请求，接收 WebSocket 信息的控制类
  * @Date 2018-05-07
  * @Time 15:41
  */
@@ -40,6 +40,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        //创建新的 WebSocket 连接，保存当前 channel
         webSocketInfoService.addChannel(ctx.channel());
         System.out.println("————客户端与服务端连接开启————");
     }
@@ -57,7 +58,6 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
      */
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("—————channelReadComplete————");
         ctx.flush();
     }
 
@@ -75,9 +75,8 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
      */
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
-        System.out.println("—————channelRead0————");
         if (o instanceof FullHttpRequest) {
-            //处理客户端向服务端发起 http 握手请求的业务
+            //处理客户端向服务端发起 http 请求的业务
             handHttpRequest(channelHandlerContext, (FullHttpRequest) o);
         } else if (o instanceof WebSocketFrame) {
             //处理客户端与服务端之间的 websocket 业务
@@ -89,8 +88,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
      * 处理客户端向服务端发起 http 握手请求的业务
      */
     private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
-        System.out.println("—————handHttpRequest————");
-        // 如果请求失败或者该请求不是客户端向服务端发起的 http 握手请求，则响应错误信息
+        // 如果请求失败或者该请求不是客户端向服务端发起的 http 请求，则响应错误信息
         if (!request.decoderResult().isSuccess()
                 || !("websocket".equals(request.headers().get("Upgrade")))) {
             // code ：400
@@ -103,7 +101,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
         //新建一个握手
         handshaker = factory.newHandshaker(request);
         if (handshaker == null) {
-            //如果为空，返回不能支持 websocket 版本的响应
+            //如果为空，返回响应：不受支持的 websocket 版本
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
             //否则，执行握手
@@ -115,7 +113,6 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
      * 处理客户端与服务端之间的 websocket 业务
      */
     private void handWebsocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
-        System.out.println("—————handWebsocketFrame————");
         //判断是否是关闭 websocket 的指令
         if (frame instanceof CloseWebSocketFrame) {
             //关闭握手
@@ -128,69 +125,83 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
             ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
             return;
         }
+        // 判断是否Pong消息
+        if (frame instanceof PongWebSocketFrame) {
+            ctx.writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
+            return;
+        }
         //判断是否是二进制消息，如果是二进制消息，抛出异常
         if (!(frame instanceof TextWebSocketFrame)) {
             System.out.println("目前我们不支持二进制消息");
             ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
             throw new RuntimeException("【" + this.getClass().getName() + "】不支持消息");
         }
-        //返回应答消息
-        // 获取客户端向服务端发送的消息
+        // 返回应答消息
+        // 获取并解析客户端向服务端发送的 json 消息
         String message = ((TextWebSocketFrame) frame).text();
         JSONObject json = JSONObject.parseObject(message);
         int code = json.getInteger("code");
         String nick = json.getString("nick");
-        User user = WebSocketInfoService.webSocketInfoMap.get(ctx.channel());
         String chatMessage = json.getString("chatMessage");
+        //从 webSocketInfoMap 拿出属于当前 channel 的 User 信息
+        User user = WebSocketInfoService.webSocketInfoMap.get(ctx.channel());
         TextWebSocketFrame tws;
         switch (code) {
+            //用户登陆
             case LOGIN_CODE:
+                //生成 UUID 作为用户 id
                 String id = UUID.randomUUID().toString();
                 if (!webSocketInfoService.addUser(ctx.channel(), nick, id)) {
                     return;
                 }
                 webSocketInfoService.updateUserListAndCount();
-                tws = new TextWebSocketFrame(messageService
-                        .getSystemMessageJSONString("欢迎" + nick + "来到聊天室~", NORMAL_SYSTEM_MESSGAE_CODE));
-                //群发，服务端向每个连接上来的客户端群发消息
+                //向每个连接上来的客户端群发新用户登陆信息
+                tws = new TextWebSocketFrame(messageService.messageJSONStringFactory(SYSTEM_MESSAGE_CODE,
+                        "欢迎" + nick + "来到聊天室~", NORMAL_SYSTEM_MESSGAE_CODE, null));
                 NettyConfig.channelGroup.writeAndFlush(tws);
-                tws = new TextWebSocketFrame(messageService.getPersonalSystemMessageJSONString(user));
+                //再向当前登陆的客户端发送该用户的用户信息，用于前端使用
+                tws = new TextWebSocketFrame(messageService.messageJSONStringFactory(SYSTEM_MESSAGE_CODE, null,
+                        PERSONAL_SYSTEM_MESSGAE_CODE, user));
                 ctx.channel().writeAndFlush(tws);
                 break;
+            //群聊
             case GROUP_CHAT_CODE:
-                tws = new TextWebSocketFrame(messageService
-                        .getGroupChatMessageJSONString(user, chatMessage));
-                //群发，服务端向每个连接上来的客户端群发消息
+                //向每个连接上来的客户端群发群聊消息
+                tws = new TextWebSocketFrame(messageService.messageJSONStringFactory(GROUP_CHAT_MESSAGE_CODE, chatMessage,
+                        user, null));
                 NettyConfig.channelGroup.writeAndFlush(tws);
                 break;
+            //私聊
             case PRIVATE_CHAT_CODE:
                 Channel myChannel = ctx.channel();
                 //接收人id
                 String receiverId = json.getString("id");
                 //发送人id
                 String senderId = user.getId();
-                //发给对方
-                tws = new TextWebSocketFrame(messageService
-                        .getPrivateChatMessageJSONString(user, senderId, chatMessage));
+                /*
+                    向目标用户发送私聊信息，发送人 id 为 senderId
+                 */
+                tws = new TextWebSocketFrame(messageService.messageJSONStringFactory(PRIVATE_CHAT_MESSAGE_CODE, chatMessage,
+                        user, senderId));
                 webSocketInfoService.sendPrivateChatMessage(receiverId, tws);
-                //如果不是发给自己
+                /*
+                    如果当前信息是自己发给自己，那么信息只需要发给自己就好
+                    但是如果是发给他人，则信息既要发给对方，也要发给自己（两边都要显示）
+                 */
                 if (!Objects.equals(receiverId, senderId)) {
-                    //再发给自己
-                    tws = new TextWebSocketFrame(messageService
-                            .getPrivateChatMessageJSONString(user, receiverId, chatMessage));
+                    //发给自己，发送人 id 为 receiverId
+                    tws = new TextWebSocketFrame(messageService.messageJSONStringFactory(PRIVATE_CHAT_MESSAGE_CODE, chatMessage,
+                            user, receiverId));
                     myChannel.writeAndFlush(tws);
                 }
-
             default:
         }
-        System.out.println("服务端收到客户端的消息====>>>" + message);
     }
 
     /**
      * 服务端向客户端响应消息
      */
     private void sendHttpResponse(ChannelHandlerContext ctx, DefaultFullHttpResponse response) {
-        System.out.println("—————sendHttpResponse————");
         if (response.status().code() != 200) {
             //创建源缓冲区
             ByteBuf byteBuf = Unpooled.copiedBuffer(response.status().toString(), CharsetUtil.UTF_8);

@@ -22,7 +22,7 @@ function systemMessage(data) {
             $("#responseContent").append("<div class='systemMessage'>" + data.message + " (" + data.time + ")" + "</div>");
             break;
         case PERSONAL_SYSTEM_MESSGAE_CODE:
-            me = data.body.user;
+            me = data.body.object;
             $("#myAvatar").attr("src", me.avatarAddress);
             break;
         case UPDATE_USERCOUNT_SYSTEM_MESSGAE_CODE :
@@ -92,14 +92,23 @@ function websocket() {
                     systemMessage(data);
                     break;
                 case PRIVATE_CHAT_MESSAGE_CODE:
-                    $("#responseContent-" + data.receiverId).append(
-                        "<div class='chat_box'>" +
-                        "   <div class='chatMessageBox'>" +
-                        "       <img class='chatAvatar' src=" + data.user.avatarAddress + ">" +
-                        "       <div class='chatTime'>" + data.user.nick + "  " + data.time + "</div>" +
-                        "       <div class='chatMessgae'><span>" + data.message + "</span></div>" +
-                        "   </div>" +
-                        "</div>");
+                    if (data.user.id !== me.id) {
+                        $("#responseContent-" + data.receiverId).append(
+                            "<div class='chat_box'>" +
+                            "   <div class='chatMessageBox'>" +
+                            "       <img class='chatAvatar' src=" + data.user.avatarAddress + ">" +
+                            "       <div class='chatTime'>" + data.user.nick + "&nbsp;&nbsp;  " + data.time + "</div>" +
+                            "       <div class='chatMessgae'><span>" + data.message + "</span></div>" +
+                            "   </div>" +
+                            "</div>");
+                    } else {
+                        $("#responseContent-" + data.receiverId).append(
+                            "   <div class='chatMessageBox_me'>" +
+                            "       <img class='chatAvatar_me' src=" + data.user.avatarAddress + ">" +
+                            "       <div class='chatTime'>" + data.time + "&nbsp;&nbsp; " + data.user.nick + "</div>" +
+                            "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
+                            "   </div>");
+                    }
             }
             boxScroll(document.getElementById("responseContent"));
         };

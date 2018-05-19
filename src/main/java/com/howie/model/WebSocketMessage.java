@@ -34,4 +34,19 @@ public class WebSocketMessage {
      * 可以存放在线人数，在线用户列表，code等
      */
     private Map<String, Object> body = new HashMap<>();
+
+    public WebSocketMessage(Integer code, String message, String time) {
+        this.code = code;
+        this.time = time;
+        this.message = message;
+    }
+
+    public WebSocketMessage(Integer code, String message, User user,
+                            String receiverId, String time) {
+        this.code = code;
+        this.user = user;
+        this.receiverId = receiverId;
+        this.time = time;
+        this.message = message;
+    }
 }
