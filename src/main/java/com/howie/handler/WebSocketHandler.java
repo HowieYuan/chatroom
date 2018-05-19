@@ -177,8 +177,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
                 if (!Objects.equals(receiverId, senderId)) {
                     //再发给自己
                     tws = new TextWebSocketFrame(messageService
-                            .getPrivateChatMessageJSONString(user, receiverId,
-                                    nick + ": " + chatMessage));
+                            .getPrivateChatMessageJSONString(user, receiverId, chatMessage));
                     myChannel.writeAndFlush(tws);
                 }
 

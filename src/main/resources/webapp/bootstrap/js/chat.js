@@ -5,7 +5,7 @@ let currentChatUserId;
 
 const webSocketUrl = "ws://localhost:8090/websocket";
 const myNick = GetQueryString("nick");
-let myAvatar;
+let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2000;
 const SYSTEM_MESSAGE_CODE = 2001;
@@ -22,8 +22,8 @@ function systemMessage(data) {
             $("#responseContent").append("<div class='systemMessage'>" + data.message + " (" + data.time + ")" + "</div>");
             break;
         case PERSONAL_SYSTEM_MESSGAE_CODE:
-            myAvatar = data.body.user.avatarAddress;
-            $("#myAvatar").attr("src", myAvatar);
+            me = data.body.user;
+            $("#myAvatar").attr("src", me.avatarAddress);
             break;
         case UPDATE_USERCOUNT_SYSTEM_MESSGAE_CODE :
             $('#userCount').text("在线人数：" + data.body.object);
@@ -72,7 +72,27 @@ function websocket() {
             let data = JSON.parse(event.data);
             switch (data.code) {
                 case GROUP_CHAT_MESSAGE_CODE:
-                    $("#responseContent").append(
+                    if (data.user.id !== me.id) {
+                        $("#responseContent").append(
+                            "   <div class='chatMessageBox'>" +
+                            "       <img class='chatAvatar' src=" + data.user.avatarAddress + ">" +
+                            "       <div class='chatTime'>" + data.user.nick + "&nbsp;&nbsp; " + data.time + "</div>" +
+                            "       <div class='chatMessgae'><span>" + data.message + "</span></div>" +
+                            "   </div>");
+                    } else {
+                        $("#responseContent").append(
+                            "   <div class='chatMessageBox_me'>" +
+                            "       <img class='chatAvatar_me' src=" + data.user.avatarAddress + ">" +
+                            "       <div class='chatTime'>" + data.time + "&nbsp;&nbsp; " + data.user.nick + "</div>" +
+                            "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
+                            "   </div>");
+                    }
+                    break;
+                case SYSTEM_MESSAGE_CODE:
+                    systemMessage(data);
+                    break;
+                case PRIVATE_CHAT_MESSAGE_CODE:
+                    $("#responseContent-" + data.receiverId).append(
                         "<div class='chat_box'>" +
                         "   <div class='chatMessageBox'>" +
                         "       <img class='chatAvatar' src=" + data.user.avatarAddress + ">" +
@@ -80,12 +100,6 @@ function websocket() {
                         "       <div class='chatMessgae'><span>" + data.message + "</span></div>" +
                         "   </div>" +
                         "</div>");
-                    break;
-                case SYSTEM_MESSAGE_CODE:
-                    systemMessage(data);
-                    break;
-                case PRIVATE_CHAT_MESSAGE_CODE:
-                    $("#responseContent-" + data.receiverId).append(data.message + " (" + data.time + ")<hr/>");
             }
             boxScroll(document.getElementById("responseContent"));
         };
