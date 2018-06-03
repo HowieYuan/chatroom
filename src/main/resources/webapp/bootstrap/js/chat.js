@@ -87,20 +87,20 @@ function websocket() {
                             "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
                             "   </div>");
                     }
+                    boxScroll(document.getElementById("responseContent"));
                     break;
                 case SYSTEM_MESSAGE_CODE:
                     systemMessage(data);
+                    boxScroll(document.getElementById("responseContent"));
                     break;
                 case PRIVATE_CHAT_MESSAGE_CODE:
                     if (data.user.id !== me.id) {
                         $("#responseContent-" + data.receiverId).append(
-                            "<div class='chat_box'>" +
                             "   <div class='chatMessageBox'>" +
                             "       <img class='chatAvatar' src=" + data.user.avatarAddress + ">" +
                             "       <div class='chatTime'>" + data.user.nick + "&nbsp;&nbsp;  " + data.time + "</div>" +
                             "       <div class='chatMessgae'><span>" + data.message + "</span></div>" +
-                            "   </div>" +
-                            "</div>");
+                            "   </div>");
                     } else {
                         $("#responseContent-" + data.receiverId).append(
                             "   <div class='chatMessageBox_me'>" +
@@ -109,8 +109,8 @@ function websocket() {
                             "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
                             "   </div>");
                     }
+                    boxScroll(document.getElementById("responseContent-" + data.receiverId));
             }
-            boxScroll(document.getElementById("responseContent"));
         };
         socket.onopen = function () {
             loginSend();
