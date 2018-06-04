@@ -56,10 +56,6 @@
     height: 70%;
 }
 
-.chat_box {
-
-}
-
 .chatMessageBox {
     margin-top: 15px;
     margin-left: 15px;
@@ -138,6 +134,7 @@
 }
 
 .box_ft {
+    resize: none;
     position: absolute;
     right: 0;
     bottom: 5%;

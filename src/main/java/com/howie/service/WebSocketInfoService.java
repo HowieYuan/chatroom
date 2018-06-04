@@ -104,7 +104,7 @@ public class WebSocketInfoService {
      * 返回一个随机的头像地址
      */
     private String getRandomAvatar() {
-        int num = new Random().nextInt(12) + 1;
+        int num = new Random().nextInt(33) + 1;
         return "../img/" + num + ".png";
     }
 

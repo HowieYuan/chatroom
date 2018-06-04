@@ -35,14 +35,16 @@ function systemMessage(data) {
             let appendString;
             userList.text("");
             userList.append(
-                '<div class="chat_item" onClick="chooseUser(null, null)">' +
+                '<div class="chat_item" onClick="chooseUser(null, null)" style="z-index: ">' +
                 '<img class="avatar img-circle" src="../img/chatroom.png" style="height: 50px;width: 50px">' +
+                '<img id="redPoint" class="img-circle" src="../img/redPoint.png" style="height: 10px;width: 10px;position: absolute;left: 60;display: none">' +
                 '<div style="color: white;font-size: large">群聊室</div>' +
                 '</div>');
             users.forEach(function (user) {
                 userList.append(
                     '<div class="chat_item" onClick="chooseUser(\'' + user.nick + '\',\'' + user.id + '\')">' +
                     '<img class="avatar img-circle" src=' + user.avatarAddress + ' style="height: 50px;width: 50px">' +
+                    '<img id="redPoint-' + user.id + '" class="img-circle" src="../img/redPoint.png" style="height: 10px;width: 10px;position: absolute;left: 60;display: none">' +
                     '<div style="color: white;font-size: large">' + user.nick + '</div>' +
                     '</div>');
                 appendString =
@@ -87,6 +89,7 @@ function websocket() {
                             "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
                             "   </div>");
                     }
+                    updateRedPoint(null);
                     boxScroll(document.getElementById("responseContent"));
                     break;
                 case SYSTEM_MESSAGE_CODE:
@@ -109,6 +112,7 @@ function websocket() {
                             "       <div class='chatMessgae_me'><span>" + data.message + "</span></div>" +
                             "   </div>");
                     }
+                    updateRedPoint(data.user.id);
                     boxScroll(document.getElementById("responseContent-" + data.receiverId));
             }
         };
@@ -140,6 +144,10 @@ function quitSend() {
 }
 
 function sendMessageToUser(message, id) {
+    if (message === "" || message == null) {
+        alert("信息不能为空~");
+        return;
+    }
     let object = {};
     object.code = 1003;
     object.nick = myNick;
@@ -149,10 +157,15 @@ function sendMessageToUser(message, id) {
 }
 
 function sendMessage(message) {
+    if (message === "" || message == null) {
+        alert("信息不能为空~");
+        return;
+    }
     let object = {};
     object.code = 1002;
     object.nick = myNick;
     object.chatMessage = message;
+    $('#sendTextarea').val("");
     send(JSON.stringify(object));
 }
 
@@ -168,25 +181,39 @@ function send(message) {
 }
 
 function chooseUser(username, id) {
-    currentChatUser = username;
     let box = $("#box");
-    if (username != null && currentChatUserNick === groupChatName) {
-        $("#box-" + id).css("display", "block");
-        box.css("display", "none");
-        currentChatUserNick = username;
-        currentChatUserId = id;
-    } else if (username != null && currentChatUserNick !== groupChatName && currentChatUserId !== id) {
-        $("#box-" + id).css("display", "block");
-        $("#box-" + currentChatUserId).css("display", "none");
-        currentChatUserNick = username;
-        currentChatUserId = id;
+    if (username != null) {
+        $("#redPoint-" + id).css("display", "none");
+        if (currentChatUserNick === groupChatName) {
+            $("#box-" + id).css("display", "block");
+            box.css("display", "none");
+            currentChatUserNick = username;
+            currentChatUserId = id;
+        } else if (currentChatUserNick !== groupChatName && currentChatUserId !== id) {
+            $("#box-" + id).css("display", "block");
+            $("#box-" + currentChatUserId).css("display", "none");
+            currentChatUserNick = username;
+            currentChatUserId = id;
+        }
     } else if (username === null && currentChatUserNick !== groupChatName) {
+        $("#redPoint").css("display", "none");
         $("#box-" + id).css("display", "none");
         box.css("display", "block");
         currentChatUserNick = groupChatName;
     }
 }
 
+/**
+ * 新消息红点提醒
+ * @param id
+ */
+function updateRedPoint(id) {
+    if (id == null && currentChatUserNick !== groupChatName) {
+        $("#redPoint").css("display", "block");
+    } else if (currentChatUserId !== id && id !== me.id) {
+        $("#redPoint-" + id).css("display", "block");
+    }
+}
 
 /**
  * Get 请求获取参数
