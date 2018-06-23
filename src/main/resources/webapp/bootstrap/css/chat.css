@@ -22,6 +22,7 @@
 .header {
     padding: 18px;
     border-bottom: 1px solid #cccccc;
+    height: 85px;
 }
 
 .avatar {
@@ -54,6 +55,20 @@
     top: 5.7%;
     width: 100%;
     height: 70%;
+}
+
+.sendButton {
+    left: 600px;
+    position: absolute;
+    background-color: #fff;
+    color: #222;
+    display: inline-block;
+    border: 1px solid #c1c1c1;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    padding: 4px 30px;
+    font-size: 14px;
 }
 
 .chatMessageBox {
@@ -134,14 +149,20 @@
 }
 
 .box_ft {
+    padding-top: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 15px;
+    outline: none;
     resize: none;
     position: absolute;
     right: 0;
-    bottom: 5%;
+    bottom: 7.5%;
     left: 0;
     height: 20%;
     width: 100%;
     background-color: #eee;
+    border-style: solid none none none;
 }
 
 .chat_item {
@@ -157,7 +178,7 @@
 .send {
     position: absolute;
     right: 0;
-    bottom: 0;
+    bottom: 2.5%;
     left: 0;
     width: 100%;
     height: 5%;

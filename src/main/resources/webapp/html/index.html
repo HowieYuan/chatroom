@@ -28,7 +28,7 @@
 </body>
 <script>
     function goToChat(message){
-        window.location.href="chat.html?nick=" + message;
+        window.location.href="chat.html?nick=" + encodeURI(encodeURI(message));
         return false;
     }
 </script>

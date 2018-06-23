@@ -10,6 +10,7 @@ let me;
 const GROUP_CHAT_MESSAGE_CODE = 2000;
 const SYSTEM_MESSAGE_CODE = 2001;
 const PRIVATE_CHAT_MESSAGE_CODE = 2002;
+const PING_MESSAGE_CODE = 2003;
 
 const NORMAL_SYSTEM_MESSGAE_CODE = 3000;
 const UPDATE_USERCOUNT_SYSTEM_MESSGAE_CODE = 3001;
@@ -18,6 +19,8 @@ const PERSONAL_SYSTEM_MESSGAE_CODE = 3003;
 
 function systemMessage(data) {
     switch (data.body.systemMessageCode) {
+        case PING_MESSAGE_CODE :
+            sendPong();
         case NORMAL_SYSTEM_MESSGAE_CODE :
             $("#responseContent").append("<div class='systemMessage'>" + data.message + " (" + data.time + ")" + "</div>");
             break;
@@ -53,9 +56,9 @@ function systemMessage(data) {
                         '    <div class="textarea scroll" id="responseContent-' + user.id + '"></div>',
                         '    <form onSubmit="return false;">',
                         '        <label>',
-                        '            <textarea class="box_ft" name="message" id="box_ft-' + user.id + '"></textarea>',
+                        '            <textarea class="box_ft" name="message" id="sendTextarea-' + user.id + '"></textarea>',
                         '        </label>',
-                        '        <button class="send" onClick="sendMessageToUser(this.form.message.value, currentChatUserId)">发送</button>',
+                        '        <div class="send"><button class="sendButton" onClick="sendMessageToUser(this.form.message.value, currentChatUserId)">发送</button></div>',
                         '    </form>',
                         '</div>'].join("");
                 repeatBox.append(appendString);
@@ -143,6 +146,13 @@ function quitSend() {
     send(JSON.stringify(object));
 }
 
+
+function sendPong() {
+    let object = {};
+    object.code = 1004;
+    send(JSON.stringify(object));
+}
+
 function sendMessageToUser(message, id) {
     if (message === "" || message == null) {
         alert("信息不能为空~");
@@ -153,6 +163,7 @@ function sendMessageToUser(message, id) {
     object.nick = myNick;
     object.id = id;
     object.chatMessage = message;
+    $('#sendTextarea-' + id).val("");
     send(JSON.stringify(object));
 }
 
@@ -224,7 +235,7 @@ function GetQueryString(name) {
     const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
     const r = window.location.search.substr(1).match(reg);
     if (r !== null) {
-        return unescape(r[2]);
+        return unescape(decodeURI(decodeURI(r[2])));
     }
     return null;
 }

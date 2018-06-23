@@ -1,7 +1,9 @@
 package com.howie.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.howie.config.NettyConfig;
 import com.howie.model.User;
+import com.howie.model.WebSocketMessage;
 import com.howie.util.WebSocketUtil;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -94,7 +96,7 @@ public class WebSocketInfoService {
         user.setId(id);
         user.setNick(nick);
         user.setAvatarAddress(getRandomAvatar());
-        user.setLoginTime(System.currentTimeMillis());
+        user.setTime(System.currentTimeMillis());
         //用户在线数量 + 1
         userCount.incrementAndGet();
         return true;
@@ -126,6 +128,53 @@ public class WebSocketInfoService {
         }
         if (receiverChannel != null) {
             receiverChannel.writeAndFlush(tws);
+        }
+    }
+
+    /**
+     * 广播 ping 信息
+     */
+    public void sendPing() {
+        Set<Channel> keySet = webSocketInfoMap.keySet();
+        for (Channel channel : keySet) {
+            User user = webSocketInfoMap.get(channel);
+            if (user == null) {
+                continue;
+            }
+            WebSocketMessage webSocketMessage = new WebSocketMessage();
+            webSocketMessage.setCode(PING_MESSAGE_CODE);
+            String message = JSONObject.toJSONString(webSocketMessage);
+            //广播用户离开的信息
+            TextWebSocketFrame tws = new TextWebSocketFrame(message);
+            new WebSocketInfoService().updateUserListAndCount();
+            NettyConfig.channelGroup.writeAndFlush(tws);
+        }
+    }
+
+    /**
+     * 从缓存中移除Channel，并且关闭Channel
+     */
+    public void scanNotActiveChannel() {
+        Set<Channel> keySet = webSocketInfoMap.keySet();
+        for (Channel channel : keySet) {
+            User user = webSocketInfoMap.get(channel);
+            if (user == null) {
+                continue;
+            }
+            if (!channel.isOpen() || !channel.isActive() &&
+                    (System.currentTimeMillis() - user.getTime()) > 10000) {
+                deleteChannel(channel);
+            }
+        }
+    }
+
+    /**
+     * 重设验证在线时间
+     */
+    public void resetUserTime(Channel channel) {
+        User user = webSocketInfoMap.get(channel);
+        if (user != null) {
+            user.setTime(System.currentTimeMillis());
         }
     }
 }

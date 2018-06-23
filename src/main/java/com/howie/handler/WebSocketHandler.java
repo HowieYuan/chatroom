@@ -86,6 +86,12 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
 
     /**
      * 处理客户端向服务端发起 http 握手请求的业务
+     * WebSocket在建立握手时，数据是通过HTTP传输的。但是建立之后，在真正传输时候是不需要HTTP协议的。
+     *
+     * WebSocket 连接过程：
+     * 首先，客户端发起http请求，经过3次握手后，建立起TCP连接；http请求里存放WebSocket支持的版本号等信息，如：Upgrade、Connection、WebSocket-Version等；
+     * 然后，服务器收到客户端的握手请求后，同样采用HTTP协议回馈数据；
+     * 最后，客户端收到连接成功的消息后，开始借助于TCP传输信道进行全双工通信。
      */
     private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
         // 如果请求失败或者该请求不是客户端向服务端发起的 http 请求，则响应错误信息
@@ -194,6 +200,11 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
                             user, receiverId));
                     myChannel.writeAndFlush(tws);
                 }
+                break;
+            //pong
+            case PONG_CHAT_CODE:
+                Channel channel = ctx.channel();
+                webSocketInfoService.resetUserTime(channel);
             default:
         }
     }

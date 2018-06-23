@@ -11,6 +11,7 @@ package com.howie.constant;
 public class MessageCodeConstant {
     /*
       CODE
+      客户端信息传送 code
      */
     /**
      * 登陆
@@ -24,10 +25,15 @@ public class MessageCodeConstant {
      * 私聊
      */
     public static final int PRIVATE_CHAT_CODE = 1003;
+    /**
+     * pong 信息
+     */
+    public static final int PONG_CHAT_CODE = 1004;
 
 
     /*
       MESSAGE_CODE
+      服务端信息传送 code
      */
     /**
      * 群聊信息
@@ -41,6 +47,10 @@ public class MessageCodeConstant {
      * 私聊信息
      */
     public static final int PRIVATE_CHAT_MESSAGE_CODE = 2002;
+    /**
+     * ping 信息
+     */
+    public static final int PING_MESSAGE_CODE = 2003;
 
 
     /*

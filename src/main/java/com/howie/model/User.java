@@ -20,5 +20,8 @@ public class User {
     private String nick;
     private String address;
     private String avatarAddress;
-    private long loginTime;
+    /**
+     * 确认在线时间
+     */
+    private long time = 0;
 }

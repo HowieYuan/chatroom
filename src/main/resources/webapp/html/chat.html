@@ -23,7 +23,7 @@
         <div class="header">
             <img class="avatar img-rounded" id="myAvatar" src="http://p8np6teyy.bkt.clouddn.com/default-avatar"
                  style="height: 50px;width: 50px">
-            <div id="nick" style="color: white;font-size: xx-large"></div>
+            <div id="nick" style="color: white;font-size: large"></div>
         </div>
         <h3 id="userCount" style="color: white;font-size: large;margin-left: 20px"></h3>
         <div id="userList" style="border-top:1px solid #cccccc"></div>
@@ -36,7 +36,9 @@
                 <label>
                     <textarea id="sendTextarea" class="box_ft" name="message"></textarea>
                 </label>
-                <button class="send" onClick="sendMessage(this.form.message.value)">发送</button>
+                <div class="send">
+                    <button class="sendButton" onClick="sendMessage(this.form.message.value)">发送</button>
+                </div>
             </form>
         </div>
     </div>
