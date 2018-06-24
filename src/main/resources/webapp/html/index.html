@@ -27,8 +27,12 @@
 </div>
 </body>
 <script>
-    function goToChat(message){
-        window.location.href="chat.html?nick=" + encodeURI(encodeURI(message));
+    function goToChat(message) {
+        if (message === "" || message === null) {
+            alert("昵称不能为空~");
+            return;
+        }
+        window.location.href = "chat.html?nick=" + encodeURI(encodeURI(message));
         return false;
     }
 </script>

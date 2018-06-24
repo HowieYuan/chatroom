@@ -144,9 +144,7 @@ public class WebSocketInfoService {
             WebSocketMessage webSocketMessage = new WebSocketMessage();
             webSocketMessage.setCode(PING_MESSAGE_CODE);
             String message = JSONObject.toJSONString(webSocketMessage);
-            //广播用户离开的信息
             TextWebSocketFrame tws = new TextWebSocketFrame(message);
-            new WebSocketInfoService().updateUserListAndCount();
             NettyConfig.channelGroup.writeAndFlush(tws);
         }
     }
