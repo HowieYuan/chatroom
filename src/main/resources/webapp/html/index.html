@@ -32,6 +32,10 @@
             alert("昵称不能为空~");
             return;
         }
+        if (message.length > 15) {
+            alert("昵称字数不能大于15~");
+            return;
+        }
         window.location.href = "chat.html?nick=" + encodeURI(encodeURI(message));
         return false;
     }
